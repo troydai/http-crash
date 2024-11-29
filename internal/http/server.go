@@ -32,10 +32,11 @@ type Server struct {
 
 func (s *Server) HandleHTTP(w http.ResponseWriter, r *http.Request) {
 	s.logger.Info("inbound", "method", r.Method, "url", r.URL.Path, "host", r.Host, "proto", r.Proto, "agent", r.UserAgent(), "peer", r.RemoteAddr, "counter", s.counter.Load())
+	newCount := s.counter.Add(1)
 
-	if newValue := s.counter.Add(1); newValue%s.frequency == 0 {
-		s.logger.Warn("crash", "counter", newValue)
-		panic("crash after 10 requests")
+	if s.frequency != 0 && newCount%s.frequency == 0 {
+		s.logger.Warn("crash", "counter", newCount)
+		panic("crash as requested")
 	}
 
 	s.logger.Info("outbound", "status", 200)
