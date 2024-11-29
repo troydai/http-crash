@@ -18,7 +18,7 @@ RUN go build -o /app/main main.go
 FROM alpine:latest
 
 # Install dumb-init
-RUN apk --no-cache add dumb-init
+RUN apk --no-cache add dumb-init tcpdump curl bind-tools
 
 # Set the working directory inside the container
 WORKDIR /app
