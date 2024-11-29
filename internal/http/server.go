@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 	"sync/atomic"
+	"time"
 
 	"go.uber.org/fx"
 
@@ -18,21 +19,36 @@ var Module = fx.Options(
 
 func ProvideServer(s *settings.Values, l *slog.Logger) *Server {
 	return &Server{
-		counter:   &atomic.Uint64{},
-		frequency: s.CrashFrequency,
-		logger:    l,
+		counter:    &atomic.Uint64{},
+		frequency:  s.CrashFrequency,
+		logger:     l,
+		latencyGen: newNormalDistribution(s.LatencyMean, s.LatencyStddev),
 	}
 }
 
 type Server struct {
-	counter   *atomic.Uint64
-	frequency uint64
-	logger    *slog.Logger
+	counter    *atomic.Uint64
+	frequency  uint64
+	logger     *slog.Logger
+	latencyGen *normalDistribution
 }
 
 func (s *Server) HandleHTTP(w http.ResponseWriter, r *http.Request) {
-	s.logger.Info("inbound", "method", r.Method, "url", r.URL.Path, "host", r.Host, "proto", r.Proto, "agent", r.UserAgent(), "peer", r.RemoteAddr, "counter", s.counter.Load())
 	newCount := s.counter.Add(1)
+	latency := s.latencyGen.latency()
+
+	s.logger.Info("inbound",
+		"method", r.Method,
+		"url", r.URL.Path,
+		"host", r.Host,
+		"proto", r.Proto,
+		"agent", r.UserAgent(),
+		"peer", r.RemoteAddr,
+		"counter", newCount,
+		"latency", latency,
+	)
+
+	time.Sleep(s.latencyGen.latency())
 
 	if s.frequency != 0 && newCount%s.frequency == 0 {
 		s.logger.Warn("crash", "counter", newCount)

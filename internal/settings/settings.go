@@ -11,6 +11,8 @@ var Module = fx.Provide(ProvideSettings)
 
 type Values struct {
 	CrashFrequency uint64 `env:"HTTP_CRASH_FREQUENCY" envDefault:"10"` // Set to zero to disable
+	LatencyMean    uint64 `env:"HTTP_LATENCY_MEAN" envDefault:"50"`
+	LatencyStddev  uint64 `env:"HTTP_LATENCY_STDDEV" envDefault:"25"`
 }
 
 func ProvideSettings() (*Values, error) {
