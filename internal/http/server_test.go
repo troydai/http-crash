@@ -1,22 +1,22 @@
-package main
+package http
 
 import (
 	"io"
 	"log/slog"
 	"net/http"
-	"sync/atomic"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/troydai/http-crash/internal/settings"
 )
 
 func TestServer(t *testing.T) {
-	s := &server{
-		counter:   &atomic.Uint64{},
-		frequency: 10,
-		logger:    slog.New(slog.NewTextHandler(io.Discard, nil)),
-	}
-	s.handler(&fakeResponseWriter{}, randomRequest())
+	s := ProvideServer(
+		&settings.Values{CrashFrequency: 5},
+		slog.New(slog.NewTextHandler(io.Discard, nil)),
+	)
+
+	s.HandleHTTP(&fakeResponseWriter{}, randomRequest())
 	assert.Equal(t, uint64(1), s.counter.Load())
 }
 

@@ -12,7 +12,7 @@ RUN go mod download
 COPY . .
 
 # Build the Go application
-RUN go build -o /app/main main.go
+RUN go build -o /app/main cmd/main.go
 
 # Use a minimal image for the final container
 FROM alpine:latest
